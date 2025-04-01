@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Emotion Detection</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #0d0d0d;
+            color: white;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .emoji-bg {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .emoji {
+            position: absolute;
+            font-size: 40px;
+            opacity: 0.7;
+            animation: floatUp 6s linear infinite;
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(100vh); opacity: 1; }
+            100% { transform: translateY(-10vh); opacity: 0; }
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0px 4px 20px rgba(255, 255, 255, 0.3);
+            max-width: 450px;
+            width: 100%;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            position: relative;
+            z-index: 10;
+        }
+
+        h2 {
+            color: #fff;
+            font-size: 24px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        button {
+            background: linear-gradient(90deg, #ff00ff, #00ffff);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin: 10px;
+            font-weight: bold;
+            box-shadow: 0px 4px 10px rgba(255, 255, 255, 0.3);
+        }
+
+        button:hover {
+            transform: scale(1.1);
+            box-shadow: 0px 6px 20px rgba(255, 255, 255, 0.5);
+        }
+
+        #video-stream {
+            width: 100%;
+            max-width: 400px;
+            height: auto;
+            display: none;
+            margin-top: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 8px rgba(255, 255, 255, 0.2);
+        }
+
+        #realtime-result {
+            font-size: 18px;
+            margin-top: 20px;
+            font-weight: bold;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0px 4px 6px rgba(255, 255, 255, 0.2);
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="emoji-bg"></div>
+    
+    <div class="container">
+        <h2>Real-Time Emotion Detection</h2>
+        <button onclick="startRealTime()">Start Detection</button>
+        <img id="video-stream" src="" alt="Real-Time Emotion Detection">
+        <p id="realtime-result"></p>
+        <br>
+        <button onclick="location.href='index.html'">Back to Home</button>
+    </div>
+
+    <script>
+        function generateEmojis() {
+            const emojiContainer = document.querySelector(".emoji-bg");
+            const emojis = ["😊", "😢", "😂", "😡", "😱", "😍", "😔", "😆"];
+            
+            for (let i = 0; i < 20; i++) {
+                let emojiElement = document.createElement("div");
+                emojiElement.classList.add("emoji");
+                emojiElement.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+                emojiElement.style.left = Math.random() * 100 + "vw";
+                emojiElement.style.animationDuration = Math.random() * 3 + 4 + "s";
+                emojiElement.style.animationDelay = Math.random() * 3 + "s";
+                emojiContainer.appendChild(emojiElement);
+            }
+        }
+
+        generateEmojis();
+
+        function startRealTime() {
+            document.getElementById('video-stream').src = "http://127.0.0.1:5000/video_feed";
+            document.getElementById('video-stream').style.display = 'block';
+            setInterval(() => {
+                fetch("http://127.0.0.1:5000/get_emotion")
+                .then(response => response.json())
+                .then(data => {
+                    
+                })
+                .catch(error => console.error("Error fetching real-time emotion:", error));
+            }, 2000);
+        }
+    </script>
+</body>
+</html>

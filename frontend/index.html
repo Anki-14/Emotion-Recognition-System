@@ -1,13 +1,465 @@
-<!doctype html>
+<!-- <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Emotion Recognition System</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotion Detection</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #000;
+            color: white;
+            text-align: center;
+            padding: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+            transition: background 0.3s, color 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .emoji-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        .emoji {
+            position: absolute;
+            font-size: 40px;
+            opacity: 0.7;
+            animation: floatUp 5s linear infinite;
+        }
+        @keyframes floatUp {
+            0% { transform: translateY(100vh); opacity: 1; }
+            100% { transform: translateY(-10vh); opacity: 0; }
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 60px;
+            border-radius: 30px;
+            box-shadow: 0px 4px 10px rgba(255, 255, 255, 0.3);
+            max-width: 400px;
+            width: 100%;
+        }
+        h2 {
+            color: white;
+        }
+        input[type="file"] {
+            margin: 20px 0;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #fff;
+            color: black;
+        }
+        button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        #upload-result {
+            font-size: 18px;
+            color: white;
+            margin-top: 20px;
+            font-weight: bold;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0px 4px 6px rgba(255, 255, 255, 0.2);
+            display: inline-block;
+        }
+        #preview {
+
+    max-width: 100%;
+    max-height: 230px; /* Limit height to keep it inside the box */
+    width: auto;
+    height: auto;
+    display: none;
+    margin-top: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 4px 8px rgba(255, 255, 255, 0.2);
+    object-fit: contain; /* Ensures the image is fully visible without distortion */}
+
+        
+        .toggle-mode {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: white;
+            color: black;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .dark-mode {
+            background-color: white;
+            color: black;
+        }
+        .dark-mode .container {
+            background: rgba(0, 0, 0, 0.1);
+            color: black;
+        }
+        .dark-mode #upload-result {
+            background: rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="emoji-bg"></div>
+    <div class="toggle-mode" onclick="toggleMode()">🌙 Dark Mode</div>
+    <div class="container">
+        <h2>Upload an Image for Emotion Detection</h2>
+        <input type="file" id="imageInput" accept="image/*">
+        <button onclick="uploadImage()">Detect Emotion</button>
+        <p id="upload-result"></p>
+        <img id="preview" src="" alt="Uploaded Image Preview">
+    </div>
+
+    <script>
+        function toggleMode() {
+            document.body.classList.toggle("dark-mode");
+            let modeBtn = document.querySelector(".toggle-mode");
+            if (document.body.classList.contains("dark-mode")) {
+                modeBtn.innerText = "☀️ Light Mode";
+            } else {
+                modeBtn.innerText = "🌙 Dark Mode";
+            }
+        }
+
+        function uploadImage() {
+            let fileInput = document.getElementById('imageInput');
+            let file = fileInput.files[0];
+            if (!file) {
+                alert("Please select an image first.");
+                return;
+            }
+
+            let formData = new FormData();
+            formData.append("file", file);
+
+            // Preview the uploaded image
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('preview').src = e.target.result;
+                document.getElementById('preview').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+
+            // Send image to backend
+            fetch("http://127.0.0.1:5000/upload-emotion", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("upload-result").innerText = "Detected Emotion: " + data.emotion;
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                document.getElementById("upload-result").innerText = "Error detecting emotion.";
+            });
+        }
+
+        function createEmojis() {
+            const emojiList = ['😀', '😂', '😢', '😡', '😱', '😍', '😎', '😭'];
+            const emojiContainer = document.querySelector('.emoji-bg');
+            setInterval(() => {
+                let emoji = document.createElement('div');
+                emoji.classList.add('emoji');
+                emoji.innerText = emojiList[Math.floor(Math.random() * emojiList.length)];
+                emoji.style.left = Math.random() * 100 + 'vw';
+                emoji.style.animationDuration = (Math.random() * 3 + 3) + 's';
+                emojiContainer.appendChild(emoji);
+                setTimeout(() => emoji.remove(), 5000);
+            }, 500);
+        }
+        createEmojis();
+    </script>
+</body>
+</html> -->
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotion Detection</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #000;
+            color: white;
+            text-align: center;
+            padding: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+            transition: background 0.3s, color 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .container-wrapper {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0px 4px 10px rgba(255, 255, 255, 0.3);
+            max-width: 400px;
+            width: 100%;
+        }
+        h2 {
+            color: white;
+        }
+        input[type="file"] {
+            margin: 20px 0;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #fff;
+            color: black;
+        }
+        button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        #upload-result, #realtime-result {
+            font-size: 18px;
+            color: white;
+            margin-top: 20px;
+            font-weight: bold;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0px 4px 6px rgba(255, 255, 255, 0.2);
+            display: inline-block;
+        }
+        #preview, #video-stream {
+            max-width: 100%;
+            max-height: 230px;
+            width: auto;
+            height: auto;
+            display: none;
+            margin-top: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 8px rgba(255, 255, 255, 0.2);
+            object-fit: contain;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-wrapper">
+        <div class="container">
+            <h2>Upload an Image for Emotion Detection</h2>
+            <input type="file" id="imageInput" accept="image/*">
+            <button onclick="uploadImage()">Detect Emotion</button>
+            <p id="upload-result"></p>
+            <img id="preview" src="" alt="Uploaded Image Preview">
+        </div>
+        
+        <div class="container">
+            <h2>Real-Time Emotion Detection</h2>
+            <button onclick="startRealTime()">Start Real-Time Detection</button>
+            <img id="video-stream" src="" alt="Real-Time Emotion Detection">
+            <p id="realtime-result"></p>
+        </div>
+    </div>
+
+    <script>
+        function uploadImage() {
+            let fileInput = document.getElementById('imageInput');
+            let file = fileInput.files[0];
+            if (!file) {
+                alert("Please select an image first.");
+                return;
+            }
+
+            let formData = new FormData();
+            formData.append("file", file);
+
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('preview').src = e.target.result;
+                document.getElementById('preview').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+
+            fetch("http://127.0.0.1:5000/upload-emotion", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("upload-result").innerText = "Detected Emotion: " + data.emotion;
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                document.getElementById("upload-result").innerText = "Error detecting emotion.";
+            });
+        }
+
+        function startRealTime() {
+            document.getElementById('video-stream').src = "http://127.0.0.1:5000/video_feed";
+            document.getElementById('video-stream').style.display = 'block';
+            setInterval(() => {
+                fetch("http://127.0.0.1:5000/get_emotion")
+                .then(response => response.json())
+                .then(data => {
+                    
+                })
+                .catch(error => console.error("Error fetching real-time emotion:", error));
+            }, 2000);
+        }
+    </script>
+</body>
+</html> -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotion Detection</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        /* Dark Mode Styling */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #0d0d0d;
+            color: white;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Floating Emojis */
+        .emoji-bg {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        .emoji {
+            position: absolute;
+            font-size: 40px;
+            opacity: 0.7;
+            animation: floatUp 6s linear infinite;
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(100vh); opacity: 1; }
+            100% { transform: translateY(-10vh); opacity: 0; }
+        }
+
+        /* Glowing Container */
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0px 4px 20px rgba(255, 255, 255, 0.3);
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Improved Heading */
+        h2 {
+            color: #fff;
+            font-size: 24px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* Buttons with Neon Effect */
+        button {
+            background: linear-gradient(90deg, #ff00ff, #00ffff);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin: 10px;
+            font-weight: bold;
+            box-shadow: 0px 4px 10px rgba(255, 255, 255, 0.3);
+        }
+
+        button:hover {
+            transform: scale(1.1);
+            box-shadow: 0px 6px 20px rgba(255, 255, 255, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <!-- Floating Emojis -->
+    <div class="emoji-bg"></div>
+
+    <!-- Main Container -->
+    <div class="container" id="welcome-page">
+        <h2>Welcome to Emotion Detection</h2>
+        <p>Select an option below:</p>
+        <button onclick="location.href='realtime.html'">Real-Time Detection</button>
+        <button onclick="location.href='manual.html'">Upload Image</button>
+    </div>
+
+    <script>
+        // Function to generate random floating emojis
+        function generateEmojis() {
+            const emojiContainer = document.querySelector(".emoji-bg");
+            const emojis = ["😊", "😢", "😂", "😡", "😱", "😍", "😔", "😆"];
+            
+            for (let i = 0; i < 20; i++) { // Number of emojis
+                let emojiElement = document.createElement("div");
+                emojiElement.classList.add("emoji");
+                emojiElement.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+                emojiElement.style.left = Math.random() * 100 + "vw";
+                emojiElement.style.animationDuration = Math.random() * 3 + 4 + "s";
+                emojiElement.style.animationDelay = Math.random() * 3 + "s";
+                emojiContainer.appendChild(emojiElement);
+            }
+        }
+
+        generateEmojis(); // Call function to generate emojis
+    </script>
+</body>
 </html>
+
